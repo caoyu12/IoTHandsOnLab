@@ -1,0 +1,79 @@
+---------------- Preparation ------------------
+
+---------------- Azure Portal -----------------
+https://portal.azure.com/
+
+---------------- Login Credentials ------------
+User name/Initial password
+
+################ L-100 HOL ####################
+IoT Hub Name: HolIoTHub
+
+---------------- C2D/D2c Message --------------
+1, Message to device
+Message Body: your messages
+Click 'Send Message'
+
+2, Direct method
+Method Name: echo
+Payload: your messages
+Click 'Invoke Method'
+
+3, Direct method
+Method Name: setAlThreshold
+payload: {"alThreshold":777}
+Click 'Invoke Method'
+
+---------------- Azure IoT Device -------------
+Navigate to your IoT Hub -> your Device -> Device twin
+Add below key-value string into "desired" block(with comma):
+"temThreshold": {"value": 20},
+
+e.g.
+    ...
+    "properties": {
+        "desired": {
+            "temThreshold": {"value": 20},
+            "$metadata": {
+                "$lastUpdated": "2022-02-17T03:06:45.9526499Z"
+            },
+            "$version": 1
+        },
+    ...
+
+################ L-200 HOL ####################
+---------------- Azure SQL DB -----------------
+DB Server:	holiotsqldbserver
+Database:	HolIoTSqlDB
+
+SELECT * FROM  [dbo].[TelemetryData] WHERE DeviceId = 'your device id'
+
+---------------- Azure Stream Analytics ---------
+Stream Name:	hol-sas-{your device id}
+Subscription:	Microsoft Azure Enterprise
+Resource group:	iothub
+Location:		Southeast Asia
+
+Input alias:	iotinput
+Consumer group:	asa-{your device id}
+Output alias:	sqloutput
+Output table:	TelemetryData
+Authentication mode:	Connection string
+
+
+WITH inputdata AS (
+    SELECT
+		iotinput.IoTHub.ConnectionDeviceId as DeviceId, 
+		iotinput.Temperature, 
+		iotinput.Humidity, 
+		iotinput.AmbientLight, 
+		iotinput.Altitude,
+		iotinput.Pressure, 
+		iotinput.Pitch, 
+		iotinput.Roll,
+		iotinput.AccelX, 
+		iotinput.MagnetometerX
+    FROM iotinput
+    WHERE iotinput.IoTHub.ConnectionDeviceId = 'your device id'
+)
+SELECT * INTO sqloutput FROM inputdata

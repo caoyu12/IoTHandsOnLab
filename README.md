@@ -1,2 +1,2 @@
 # IoTHandsOnLab
-one time use
+disposable
